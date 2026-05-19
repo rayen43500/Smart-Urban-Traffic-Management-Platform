@@ -65,6 +65,7 @@ npm run dev
 - Auth REST: `docs/auth-api.md`
 - GraphQL Gateway: `docs/graphql.md`
 - UML et architecture: `docs/uml.md`
+- Repartition du code par personne: `docs/repartition-code.md`
 
 ## Branches Recommandees
 
