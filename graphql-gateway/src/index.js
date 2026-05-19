@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const { ApolloGateway, RemoteGraphQLDataSource } = require("@apollo/gateway");
+const { ApolloServerPluginLandingPageLocalDefault } = require("@apollo/server/plugin/landingPage/default");
 const { getUserFromHeader } = require("./auth");
 
 const PORT = Number(process.env.PORT || 4000);
@@ -25,6 +26,11 @@ async function startServer() {
   app.use(cors());
   app.use(helmet());
   app.use(morgan("dev"));
+  app.use(express.json());
+
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET must be set");
+  }
 
   const gateway = new ApolloGateway({
     serviceList,
@@ -44,7 +50,8 @@ async function startServer() {
 
   const server = new ApolloServer({
     gateway,
-    introspection: true
+    introspection: true,
+    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
   });
 
   await server.start();
