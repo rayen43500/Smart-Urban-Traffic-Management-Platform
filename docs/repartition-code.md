@@ -87,6 +87,7 @@ Fichiers importants:
 - `src/graphql/schema.js`: schema GraphQL du service auth.
 - `src/graphql/resolvers.js`: resolvers GraphQL login/register/users/me.
 - `prisma/schema.prisma`: modele base de donnees `User`.
+- `prisma/seed.js`: cree les comptes de test pour la connexion.
 
 Base de donnees:
 
@@ -109,6 +110,18 @@ GET /profile
 GET /admin/users
 GET /health
 ```
+
+Seed data connexion:
+
+```bash
+cd backend/auth-service
+npm run prisma:seed
+```
+
+| Role | Email | Mot de passe |
+| --- | --- | --- |
+| ADMIN | `admin@smarttraffic.local` | `admin123` |
+| OPERATOR | `operator@smarttraffic.local` | `operator123` |
 
 GraphQL:
 

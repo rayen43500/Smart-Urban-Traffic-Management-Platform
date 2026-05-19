@@ -1,13 +1,19 @@
 # Smart Traffic Frontend
 
-Dashboard React/Vite pour la gestion des incidents et notifications.
+Interface React/Vite pour la plateforme Smart Urban Traffic Management.
 
 ## Fonctionnalites
 
-- Statistiques incidents: total, signales, en cours, resolus.
-- Creation, modification, suppression et changement de statut des incidents.
-- Historique des notifications.
-- Marquage des notifications comme lues.
+- Home operationnel avec acces connexion/inscription.
+- Login/Register connectes au `auth-service`.
+- Session JWT persistee dans `localStorage`.
+- Chargement du profil securise.
+- Dashboard avec vue globale, incidents, vehicules, trafic, alertes et gateway.
+- CRUD incidents avec notifications automatiques.
+- CRUD vehicules, ajout position GPS, simulation et historique.
+- CRUD zones trafic et analyse densite/vitesse.
+- Notifications manuelles et marquage comme lu.
+- Vue endpoints pour tester les services et ouvrir Apollo Gateway.
 
 ## Variables
 

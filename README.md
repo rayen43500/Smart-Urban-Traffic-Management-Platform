@@ -44,8 +44,16 @@ npm install
 copy .env.example .env
 npx prisma generate
 npx prisma migrate dev --name init
+npm run prisma:seed
 npm run dev
 ```
+
+Comptes de test crees par le seed:
+
+| Role | Email | Mot de passe |
+| --- | --- | --- |
+| ADMIN | `admin@smarttraffic.local` | `admin123` |
+| OPERATOR | `operator@smarttraffic.local` | `operator123` |
 
 ```bash
 cd backend/graphql-gateway
