@@ -4,6 +4,9 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const http = require("http");
+const WebSocket = require("ws");
+const { v4: uuidv4 } = require("uuid");
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const { buildSubgraphSchema } = require("@apollo/subgraph");
@@ -11,9 +14,15 @@ const { gql } = require("graphql-tag");
 
 const PORT = Number(process.env.PORT || 4002);
 
+// In-memory storage for vehicles and positions. Small, simple, and easy to extend.
 const vehicles = [
-  { id: "v1", plate: "AA-123-BB", status: "ACTIVE", lat: 36.8065, lng: 10.1815 },
-  { id: "v2", plate: "CC-456-DD", status: "IDLE", lat: 36.81, lng: 10.19 }
+  { id: "v1", matricule: "AA-123-BB", type: "car", marque: "Renault", status: "ACTIVE", lat: 36.8065, lng: 10.1815 },
+  { id: "v2", matricule: "CC-456-DD", type: "bus", marque: "Mercedes", status: "IDLE", lat: 36.81, lng: 10.19 }
+];
+
+const positions = [
+  // sample position
+  { id: uuidv4(), vehicle_id: "v1", latitude: 36.8065, longitude: 10.1815, speed: 20, created_at: new Date().toISOString() }
 ];
 
 const typeDefs = gql`
@@ -49,6 +58,10 @@ const resolvers = {
 
       vehicle.lat = lat;
       vehicle.lng = lng;
+      // also create a position record
+      const pos = { id: uuidv4(), vehicle_id: id, latitude: lat, longitude: lng, speed: 0, created_at: new Date().toISOString() };
+      positions.push(pos);
+      // broadcast handled separately by WebSocket
       return vehicle;
     }
   },
@@ -63,19 +76,103 @@ async function startServer() {
   app.use(helmet());
   app.use(morgan("dev"));
 
-  const server = new ApolloServer({
+  app.use(express.json());
+
+  // REST endpoints for vehicle management
+  app.post("/vehicles", (req, res) => {
+    const { matricule, type, marque, status } = req.body;
+    if (!matricule) return res.status(400).json({ error: "matricule required" });
+    const id = uuidv4();
+    const v = { id, matricule, type: type || "unknown", marque: marque || "unknown", status: status || "IDLE", lat: 0, lng: 0 };
+    vehicles.push(v);
+    res.status(201).json(v);
+  });
+
+  app.get("/vehicles", (req, res) => {
+    res.json(vehicles);
+  });
+
+  app.get("/vehicles/:id", (req, res) => {
+    const v = vehicles.find((x) => x.id === req.params.id);
+    if (!v) return res.status(404).json({ error: "not found" });
+    res.json(v);
+  });
+
+  app.post("/vehicles/:id/position", (req, res) => {
+    const { latitude, longitude, speed } = req.body;
+    const vehicle = vehicles.find((v) => v.id === req.params.id);
+    if (!vehicle) return res.status(404).json({ error: "vehicle not found" });
+    const pos = { id: uuidv4(), vehicle_id: vehicle.id, latitude, longitude, speed: speed || 0, created_at: new Date().toISOString() };
+    positions.push(pos);
+    vehicle.lat = latitude;
+    vehicle.lng = longitude;
+    // broadcast to websocket clients
+    broadcast({ type: "position", data: pos });
+    res.status(201).json(pos);
+  });
+
+  app.get("/vehicles/:id/history", (req, res) => {
+    const hist = positions.filter((p) => p.vehicle_id === req.params.id).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    res.json(hist);
+  });
+
+  // simple GPS simulation endpoint: create `steps` positions with incremental offset
+  app.post("/vehicles/:id/simulate", (req, res) => {
+    const { steps = 5, deltaLat = 0.0001, deltaLng = 0.0001, baseSpeed = 30 } = req.body || {};
+    const vehicle = vehicles.find((v) => v.id === req.params.id);
+    if (!vehicle) return res.status(404).json({ error: "vehicle not found" });
+    const created = [];
+    for (let i = 0; i < steps; i++) {
+      const lat = vehicle.lat + deltaLat * (i + 1);
+      const lng = vehicle.lng + deltaLng * (i + 1);
+      const pos = { id: uuidv4(), vehicle_id: vehicle.id, latitude: lat, longitude: lng, speed: baseSpeed, created_at: new Date().toISOString() };
+      positions.push(pos);
+      vehicle.lat = lat;
+      vehicle.lng = lng;
+      created.push(pos);
+      broadcast({ type: "position", data: pos });
+    }
+    res.json({ created });
+  });
+
+
+  const apolloServer = new ApolloServer({
     schema: buildSubgraphSchema([{ typeDefs, resolvers }])
   });
 
-  await server.start();
+  await apolloServer.start();
 
-  app.use("/graphql", expressMiddleware(server));
+  app.use("/graphql", expressMiddleware(apolloServer));
 
   app.get("/health", (req, res) => {
     res.json({ status: "ok" });
   });
 
-  app.listen(PORT, () => {
+  // create HTTP server and attach WebSocket server for realtime updates
+  const httpServer = http.createServer(app);
+  const wss = new WebSocket.Server({ server: httpServer, path: "/ws" });
+
+  function broadcast(obj) {
+    const data = JSON.stringify(obj);
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) client.send(data);
+    });
+  }
+
+  wss.on("connection", (ws) => {
+    ws.send(JSON.stringify({ type: "welcome", message: "connected to vehicle-service" }));
+    ws.on("message", (m) => {
+      // echo or log incoming messages
+      try {
+        const parsed = JSON.parse(m.toString());
+        console.log("ws recv:", parsed);
+      } catch (e) {
+        console.log("ws recv (raw):", m.toString());
+      }
+    });
+  });
+
+  httpServer.listen(PORT, () => {
     console.log(`vehicle-service running on port ${PORT}`);
   });
 }
