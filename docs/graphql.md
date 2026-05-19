@@ -3,8 +3,15 @@
 Gateway endpoint:
 - http://localhost:4000/graphql
 
+GraphQL Playground:
+- Enabled in local development at the same URL.
+
 Auth header:
 - Authorization: Bearer <JWT>
+
+Notes:
+- `login` and `register` are public.
+- `users` requires `ADMIN` role.
 
 ## Queries
 
@@ -66,6 +73,19 @@ query {
     username
     email
     role
+  }
+}
+```
+
+### users (ADMIN only)
+```graphql
+query {
+  users {
+    id
+    username
+    email
+    role
+    createdAt
   }
 }
 ```

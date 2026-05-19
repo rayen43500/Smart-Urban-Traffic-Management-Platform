@@ -39,6 +39,7 @@ Gateway:
 
 ## Documentation
 - GraphQL: docs/graphql.md
+- Auth REST: docs/auth-api.md
 - UML diagrams: docs/uml.md
 
 ## Branching
