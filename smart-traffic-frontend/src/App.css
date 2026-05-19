@@ -96,6 +96,73 @@
   color: var(--ink);
 }
 
+.metric-card em {
+  font-size: 12px;
+  color: var(--muted);
+  font-style: normal;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.tab {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.tab.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.section-grid {
+  display: grid;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.incident-grid,
+.notification-grid,
+.traffic-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+}
+
+.vehicle-grid {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.9fr);
+  grid-template-rows: auto auto;
+}
+
+.vehicle-list {
+  grid-row: 1 / span 2;
+}
+
+.traffic-grid .panel:last-child {
+  grid-column: 1 / -1;
+}
+
+.auth-grid .panel:last-child {
+  grid-column: 1 / -1;
+}
+
+.auth-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.gateway-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .banner {
   background: var(--danger-soft);
   border: 1px solid var(--danger-border);
@@ -274,6 +341,36 @@
   color: #2e6e36;
 }
 
+.status-active {
+  background: rgba(58, 142, 129, 0.18);
+  color: #2b6c60;
+}
+
+.status-idle {
+  background: rgba(226, 153, 75, 0.18);
+  color: #8d4c12;
+}
+
+.status-maintenance {
+  background: rgba(224, 90, 43, 0.15);
+  color: #a53a16;
+}
+
+.status-faible {
+  background: rgba(78, 145, 77, 0.2);
+  color: #2e6e36;
+}
+
+.status-moyen {
+  background: rgba(226, 153, 75, 0.18);
+  color: #8d4c12;
+}
+
+.status-eleve {
+  background: rgba(224, 90, 43, 0.15);
+  color: #a53a16;
+}
+
 .incident-meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -303,6 +400,144 @@
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.data-item {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-stack label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.form-stack input,
+.form-stack select,
+.form-stack textarea {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 0;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  font-size: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.analysis-card {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.analysis-card h3 {
+  margin: 0 0 12px;
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.analysis-grid span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.analysis-grid strong {
+  display: block;
+  font-size: 16px;
+}
+
+.gateway-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+}
+
+.gateway-card span {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.gateway-card strong {
+  display: block;
+  font-size: 15px;
+}
+
+.profile-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .notification-list {
@@ -359,16 +594,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .main-grid {
+  .section-grid,
+  .incident-grid,
+  .notification-grid,
+  .vehicle-grid,
+  .traffic-grid,
+  .auth-grid {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      'form'
-      'list'
-      'notifications';
-  }
-
-  .notification-panel {
-    position: static;
   }
 
   .incident-meta {
