@@ -11,11 +11,6 @@ const { gql } = require("graphql-tag");
 
 const PORT = Number(process.env.PORT || 4003);
 
-const zones = [
-  { id: "z1", name: "Downtown", congestionLevel: 78, status: "BUSY" },
-  { id: "z2", name: "Airport", congestionLevel: 35, status: "NORMAL" }
-];
-
 // traffic zones storage fields: id, zone_name, latitude, longitude, density, level
 const trafficZones = [
   { id: "tz1", zone_name: "Downtown", latitude: 36.8065, longitude: 10.1815, density: 0, level: "Faible" }
@@ -35,6 +30,11 @@ const typeDefs = gql`
   type TrafficZone @key(fields: "id") {
     id: ID!
     name: String!
+    zoneName: String!
+    latitude: Float!
+    longitude: Float!
+    density: Int!
+    level: String!
     congestionLevel: Int!
     status: String!
   }
@@ -46,10 +46,14 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    getTrafficZones: () => zones
+    getTrafficZones: () => trafficZones
   },
   TrafficZone: {
-    __resolveReference: (reference) => zones.find((zone) => zone.id === reference.id)
+    name: (zone) => zone.name || zone.zone_name,
+    zoneName: (zone) => zone.zone_name || zone.name,
+    congestionLevel: (zone) => zone.congestionLevel || zone.density,
+    status: (zone) => zone.status || zone.level,
+    __resolveReference: (reference) => trafficZones.find((zone) => zone.id === reference.id)
   }
 };
 
@@ -109,7 +113,7 @@ async function startServer() {
     const density = nearby.length;
     const avgSpeed = nearby.length ? Math.round(nearby.reduce((s, p) => s + (p.speed || 0), 0) / nearby.length) : 0;
     let level = "Faible";
-    if (density >= 15 || avgSpeed <= 15) level = "Élevé";
+    if (density >= 15 || avgSpeed <= 15) level = "Eleve";
     else if (density >= 5 || avgSpeed <= 30) level = "Moyen";
     z.density = density;
     z.level = level;

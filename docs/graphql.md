@@ -1,26 +1,59 @@
-# GraphQL Gateway Documentation
+# GraphQL Gateway
 
-Gateway endpoint:
-- http://localhost:4000/graphql
+Endpoint principal: `http://localhost:4000/graphql`
 
-GraphQL Playground:
-- Enabled in local development at the same URL.
+Le gateway Apollo compose les sous-graphes:
 
-Auth header:
-- Authorization: Bearer <JWT>
+- `auth-service`
+- `vehicle-service`
+- `traffic-service`
+- `incident-service`
+- `notification-service`
 
-Notes:
-- `login` and `register` are public.
-- `users` requires `ADMIN` role.
+Pour les requetes protegees, envoyer:
 
-## Queries
+```http
+Authorization: Bearer <token>
+```
 
-### getVehicles
+## Auth
+
 ```graphql
-query {
+mutation Login {
+  login(email: "operator1@example.com", password: "secret123") {
+    token
+    user {
+      id
+      username
+      email
+      role
+    }
+  }
+}
+```
+
+```graphql
+query Me {
+  me {
+    id
+    username
+    email
+    role
+    createdAt
+  }
+}
+```
+
+## Vehicules
+
+```graphql
+query GetVehicles {
   getVehicles {
     id
+    matricule
     plate
+    type
+    marque
     status
     lat
     lng
@@ -28,117 +61,112 @@ query {
 }
 ```
 
-### getIncidents
 ```graphql
-query {
-  getIncidents {
+mutation CreateVehicle {
+  createVehicle(
+    matricule: "TU-1234"
+    type: "bus"
+    marque: "Mercedes"
+    status: "ACTIVE"
+  ) {
     id
-    type
-    severity
+    matricule
     status
-    createdAt
   }
 }
 ```
 
-### getTrafficZones
 ```graphql
-query {
+mutation UpdateVehiclePosition {
+  updateVehiclePosition(id: "v1", lat: 36.8065, lng: 10.1815, speed: 30) {
+    id
+    lat
+    lng
+  }
+}
+```
+
+## Trafic
+
+```graphql
+query GetTrafficZones {
   getTrafficZones {
     id
     name
+    zoneName
+    latitude
+    longitude
+    density
+    level
     congestionLevel
     status
   }
 }
 ```
 
-### getNotifications
+## Incidents
+
 ```graphql
-query {
+query GetIncidents {
+  getIncidents {
+    id
+    title
+    description
+    type
+    status
+    latitude
+    longitude
+    createdAt
+  }
+}
+```
+
+```graphql
+mutation CreateIncident {
+  createIncident(
+    title: "Accident Avenue Centrale"
+    description: "Collision mineure"
+    type: "ACCIDENT"
+    latitude: 36.8065
+    longitude: 10.1815
+  ) {
+    id
+    title
+    status
+  }
+}
+```
+
+```graphql
+mutation UpdateIncidentStatus {
+  updateIncidentStatus(id: "incident-id", status: "RESOLU") {
+    id
+    status
+  }
+}
+```
+
+## Notifications
+
+```graphql
+query GetNotifications {
   getNotifications {
     id
     message
     channel
+    source
+    incidentId
+    read
     createdAt
   }
 }
 ```
 
-### me
 ```graphql
-query {
-  me {
+mutation MarkNotificationRead {
+  markNotificationRead(id: "notification-id") {
     id
-    username
-    email
-    role
-  }
-}
-```
-
-### users (ADMIN only)
-```graphql
-query {
-  users {
-    id
-    username
-    email
-    role
-    createdAt
-  }
-}
-```
-
-## Mutations
-
-### login
-```graphql
-mutation {
-  login(email: "admin@demo.com", password: "secret123") {
-    token
-    user {
-      id
-      username
-      role
-    }
-  }
-}
-```
-
-### register
-```graphql
-mutation {
-  register(username: "admin", email: "admin@demo.com", password: "secret123", role: ADMIN) {
-    token
-    user {
-      id
-      username
-      role
-    }
-  }
-}
-```
-
-### createIncident
-```graphql
-mutation {
-  createIncident(type: "ACCIDENT", severity: "HIGH") {
-    id
-    status
-    createdAt
-  }
-}
-```
-
-### updateVehiclePosition
-```graphql
-mutation {
-  updateVehiclePosition(id: "v1", lat: 36.8, lng: 10.17) {
-    id
-    status
-    lat
-    lng
+    read
   }
 }
 ```

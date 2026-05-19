@@ -1,96 +1,91 @@
-# Auth Service REST API
+# Auth REST API
 
-Base URL:
-- http://localhost:4001
+Base URL locale: `http://localhost:4001`
 
-## Endpoints
+## Roles
 
-### POST /register
-Create a new user.
+- `ADMIN`: acces complet, gestion utilisateurs.
+- `OPERATOR`: exploitation courante, monitoring, incidents et notifications.
 
-Request:
+## POST /register
+
+Inscrit un utilisateur. Sans token admin, le role par defaut est `OPERATOR`.
+
 ```json
 {
   "username": "operator1",
-  "email": "operator1@demo.com",
+  "email": "operator1@example.com",
   "password": "secret123",
   "role": "OPERATOR"
 }
 ```
 
-Response:
+Reponse:
+
 ```json
 {
-  "token": "<JWT>",
+  "token": "jwt-token",
   "user": {
-    "id": "...",
+    "id": "uuid",
     "username": "operator1",
-    "email": "operator1@demo.com",
+    "email": "operator1@example.com",
     "role": "OPERATOR"
   }
 }
 ```
 
-Note:
-- `role` is only accepted when the requester is `ADMIN`.
+## POST /login
 
-### POST /login
-Authenticate a user.
+Connecte un utilisateur avec email et mot de passe.
 
-Request:
 ```json
 {
-  "email": "operator1@demo.com",
+  "email": "operator1@example.com",
   "password": "secret123"
 }
 ```
 
-Response:
+Reponse:
+
 ```json
 {
-  "token": "<JWT>",
+  "token": "jwt-token",
   "user": {
-    "id": "...",
+    "id": "uuid",
     "username": "operator1",
-    "email": "operator1@demo.com",
+    "email": "operator1@example.com",
     "role": "OPERATOR"
   }
 }
 ```
 
-### GET /profile
-Get the current user profile.
+## GET /profile
 
-Header:
-- Authorization: Bearer <JWT>
+Necessite un header JWT:
 
-Response:
+```http
+Authorization: Bearer <token>
+```
+
+Reponse:
+
 ```json
 {
-  "id": "...",
+  "id": "uuid",
   "username": "operator1",
-  "email": "operator1@demo.com",
+  "email": "operator1@example.com",
   "role": "OPERATOR"
 }
 ```
 
-### GET /admin/users
-List users (ADMIN only).
+## GET /admin/users
 
-Header:
-- Authorization: Bearer <JWT>
+Reserve au role `ADMIN`.
 
-Response:
-```json
-{
-  "users": [
-    {
-      "id": "...",
-      "username": "admin",
-      "email": "admin@demo.com",
-      "role": "ADMIN",
-      "createdAt": "2026-05-19T10:00:00.000Z"
-    }
-  ]
-}
-```
+## Securite
+
+- Mots de passe hashes avec `bcrypt`.
+- JWT signe avec `JWT_SECRET`.
+- Validation des donnees avec `zod`.
+- `authGuard` pour verifier le token.
+- `requireRole("ADMIN")` pour proteger les routes sensibles.

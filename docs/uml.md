@@ -1,30 +1,44 @@
 # UML Diagrams
 
-## Use Case (Admin / Operator)
+## Use Case - Admin / Operator
+
 ```mermaid
 flowchart LR
   admin([Admin])
   operator([Operator])
 
-  uc1([Manage Users])
-  uc2([Monitor Traffic])
-  uc3([Manage Vehicles])
-  uc4([Create Incident])
-  uc5([View Notifications])
+  ucAuth([Register / Login / View Profile])
+  ucUsers([Manage Users])
+  ucGateway([Query GraphQL Gateway])
+  ucVehicles([Manage Vehicles])
+  ucGps([Simulate GPS and View History])
+  ucTraffic([Analyze Traffic Zones])
+  ucIncidents([Manage Incidents])
+  ucNotifications([View and Mark Notifications])
+  ucDashboard([Use Dashboard])
 
-  admin --> uc1
-  admin --> uc2
-  admin --> uc3
-  admin --> uc4
-  admin --> uc5
+  admin --> ucAuth
+  admin --> ucUsers
+  admin --> ucGateway
+  admin --> ucVehicles
+  admin --> ucGps
+  admin --> ucTraffic
+  admin --> ucIncidents
+  admin --> ucNotifications
+  admin --> ucDashboard
 
-  operator --> uc2
-  operator --> uc3
-  operator --> uc4
-  operator --> uc5
+  operator --> ucAuth
+  operator --> ucGateway
+  operator --> ucVehicles
+  operator --> ucGps
+  operator --> ucTraffic
+  operator --> ucIncidents
+  operator --> ucNotifications
+  operator --> ucDashboard
 ```
 
 ## Class Diagram
+
 ```mermaid
 classDiagram
   class User {
@@ -38,98 +52,169 @@ classDiagram
 
   class Vehicle {
     +String id
-    +String plate
+    +String matricule
+    +String type
+    +String marque
     +String status
     +Float lat
     +Float lng
   }
 
-  class Incident {
+  class Position {
     +String id
-    +String type
-    +String severity
-    +String status
-    +DateTime createdAt
-  }
-
-  class Notification {
-    +String id
-    +String message
-    +String channel
-    +DateTime createdAt
+    +String vehicle_id
+    +Float latitude
+    +Float longitude
+    +Float speed
+    +DateTime created_at
   }
 
   class TrafficZone {
     +String id
-    +String name
-    +Int congestionLevel
+    +String zone_name
+    +Float latitude
+    +Float longitude
+    +Int density
+    +String level
+  }
+
+  class Incident {
+    +String id
+    +String title
+    +String description
+    +String type
     +String status
+    +Float latitude
+    +Float longitude
+    +DateTime created_at
+  }
+
+  class Notification {
+    +String id
+    +String user_id
+    +String message
+    +String channel
+    +Boolean is_read
+    +DateTime created_at
+  }
+
+  class Role {
+    <<enumeration>>
+    ADMIN
+    OPERATOR
   }
 
   User "1" --> "many" Incident : reports
-  Incident --> Notification : triggers
-  Vehicle --> TrafficZone : located_in
+  User "1" --> "many" Notification : receives
+  Vehicle "1" --> "many" Position : has
+  Vehicle "many" --> "1" TrafficZone : located_in
+  TrafficZone "1" --> "many" Incident : detects
+  Incident "1" --> "many" Notification : triggers
 ```
 
 ## Sequence Diagram - Login JWT
+
 ```mermaid
 sequenceDiagram
-  participant User
+  actor User
+  participant Frontend
+  participant Gateway as GraphQL Gateway
   participant AuthService
-  participant Database
+  participant Database as Auth DB
 
-  User->>AuthService: POST /login
+  User->>Frontend: Submit email/password
+  Frontend->>Gateway: mutation login
+  Gateway->>AuthService: Forward login
   AuthService->>Database: findUserByEmail
   Database-->>AuthService: user + hashed password
-  AuthService->>AuthService: verify password
-  AuthService-->>User: JWT + profile
+  AuthService->>AuthService: bcrypt compare
+  AuthService->>AuthService: sign JWT
+  AuthService-->>Gateway: token + profile
+  Gateway-->>Frontend: token + profile
+  Frontend-->>User: authenticated dashboard
 ```
 
 ## Sequence Diagram - Detection Incident
+
 ```mermaid
 sequenceDiagram
-  participant Sensor
+  participant VehicleService
   participant TrafficService
   participant IncidentService
+  participant NotificationService
 
-  Sensor->>TrafficService: send traffic data
-  TrafficService->>TrafficService: detect anomaly
-  TrafficService->>IncidentService: createIncident
-  IncidentService-->>TrafficService: incident
+  VehicleService->>VehicleService: receive GPS position
+  VehicleService-->>TrafficService: positions for zone analysis
+  TrafficService->>TrafficService: calculate density and avg speed
+  TrafficService->>TrafficService: classify Faible / Moyen / Eleve
+  alt congestion or anomaly detected
+    TrafficService->>IncidentService: createIncident
+    IncidentService->>NotificationService: POST /notifications/auto
+  end
 ```
 
 ## Sequence Diagram - Notification Automatique
+
 ```mermaid
 sequenceDiagram
   participant IncidentService
   participant NotificationService
-  participant Operator
+  participant Dashboard
+  actor Operator
 
   IncidentService->>NotificationService: notify(incident)
   NotificationService->>NotificationService: create notification
-  NotificationService-->>Operator: real-time alert
+  Dashboard->>NotificationService: GET /notifications
+  NotificationService-->>Dashboard: notifications list
+  Dashboard-->>Operator: real-time alert view
+  Operator->>Dashboard: mark as read
+  Dashboard->>NotificationService: PATCH /notifications/:id/read
 ```
 
 ## Architecture Diagram
+
 ```mermaid
-architecture-beta
-  group core(cloud)[Core Platform]
-  group data(database)[Databases]
+flowchart TB
+  subgraph Client
+    dashboard[React Dashboard]
+  end
 
-  service gateway(server)[GraphQL Gateway] in core
-  service auth(server)[Auth Service] in core
-  service vehicle(server)[Vehicle Service] in core
-  service traffic(server)[Traffic Service] in core
-  service incident(server)[Incident Service] in core
-  service notification(server)[Notification Service] in core
+  subgraph Gateway
+    gql[GraphQL Gateway - Apollo]
+  end
 
-  service authdb(database)[Auth DB] in data
+  subgraph Backend Microservices
+    auth[Auth Service]
+    vehicle[Vehicle Service]
+    traffic[Traffic Service]
+    incident[Incident Service]
+    notification[Notification Service]
+  end
 
-  gateway:R --> L:auth
-  gateway:R --> L:vehicle
-  gateway:R --> L:traffic
-  gateway:R --> L:incident
-  gateway:R --> L:notification
+  subgraph Databases
+    authdb[(Auth PostgreSQL)]
+    vehicledb[(Vehicle DB)]
+    trafficdb[(Traffic DB)]
+    incidentdb[(Incident DB)]
+    notificationdb[(Notification DB)]
+  end
 
-  auth:B --> T:authdb
+  dashboard --> gql
+  dashboard --> incident
+  dashboard --> notification
+  dashboard -. WebSocket .-> vehicle
+
+  gql --> auth
+  gql --> vehicle
+  gql --> traffic
+  gql --> incident
+  gql --> notification
+
+  incident --> notification
+
+  auth --> authdb
+  vehicle --> vehicledb
+  traffic --> trafficdb
+  incident --> incidentdb
+  notification --> notificationdb
 ```

@@ -1,48 +1,77 @@
 # Smart Urban Traffic Management Platform
 
-Modern microservices platform to supervise urban vehicles, analyze traffic, detect incidents, and send intelligent alerts through a GraphQL gateway.
+Plateforme microservices pour superviser les vehicules urbains, analyser le trafic, gerer les incidents et envoyer des alertes via une passerelle GraphQL.
 
-## Services
-- auth-service: REST auth + GraphQL subgraph (users, login, roles)
-- vehicle-service: GraphQL subgraph for vehicles
-- traffic-service: GraphQL subgraph for traffic zones
-- incident-service: GraphQL subgraph for incidents
-- notification-service: GraphQL subgraph for notifications
-- graphql-gateway: Apollo Gateway that composes subgraphs
-- frontend-dashboard: placeholder for the UI
+## Etat du projet
+
+- Personne 1: authentification REST, JWT, bcrypt, roles ADMIN/OPERATOR, AuthGuard et API Gateway Apollo.
+- Personne 2: gestion vehicules, suivi GPS, historique positions, simulation GPS, WebSocket positions et analyse trafic.
+- Personne 3: gestion incidents, notifications automatiques et dashboard React.
 
 ## Architecture
-- Each service has its own API and database
-- Internal communication via REST and GraphQL federation
-- Real-time updates via WebSocket (planned)
 
-## Quick start (Docker)
-1) Start all services:
-   docker-compose up --build
-2) Gateway: http://localhost:4000/graphql
-3) Auth service REST: http://localhost:4001
+- `backend/auth-service`: inscription, connexion, profil, roles, sous-graphe GraphQL.
+- `backend/vehicle-service`: CRUD vehicules, positions GPS, historique, simulation, WebSocket.
+- `backend/traffic-service`: CRUD zones trafic, calcul densite, classification Faible/Moyen/Eleve.
+- `backend/incident-service`: CRUD incidents, changement statut, notification automatique.
+- `backend/notification-service`: creation, historique et marquage des notifications.
+- `backend/graphql-gateway`: Apollo Gateway centralisant les sous-graphes.
+- `smart-traffic-frontend`: dashboard React/Vite pour incidents et alertes.
 
-## Local development (example)
-Auth service:
-- cd auth-service
-- npm install
-- cp .env.example .env
-- npx prisma generate
-- npx prisma migrate dev --name init
-- npm run dev
+## Ports
 
-Gateway:
-- cd graphql-gateway
-- npm install
-- cp .env.example .env
-- npm run dev
+- Gateway GraphQL: `http://localhost:4000/graphql`
+- Auth REST/GraphQL: `http://localhost:4001`
+- Vehicle REST/GraphQL/WebSocket: `http://localhost:4002`
+- Traffic REST/GraphQL: `http://localhost:4003`
+- Incident REST/GraphQL: `http://localhost:4004`
+- Notification REST/GraphQL: `http://localhost:4005`
+- Frontend dashboard: `http://localhost:5173`
+
+## Quick Start Docker
+
+```bash
+docker-compose up --build
+```
+
+Le gateway et les services GraphQL exposent Apollo Sandbox sur `/graphql`.
+
+## Developpement Local
+
+```bash
+cd backend/auth-service
+npm install
+copy .env.example .env
+npx prisma generate
+npx prisma migrate dev --name init
+npm run dev
+```
+
+```bash
+cd backend/graphql-gateway
+npm install
+copy .env.example .env
+npm run dev
+```
+
+```bash
+cd smart-traffic-frontend
+npm install
+npm run dev
+```
 
 ## Documentation
-- GraphQL: docs/graphql.md
-- Auth REST: docs/auth-api.md
-- UML diagrams: docs/uml.md
 
-## Branching
-- Personne 1: feature/auth-graphql
-- Personne 2: feature/vehicles-traffic
-- Personne 3: feature/incidents-frontend
+- Auth REST: `docs/auth-api.md`
+- GraphQL Gateway: `docs/graphql.md`
+- UML et architecture: `docs/uml.md`
+
+## Branches Recommandees
+
+- Personne 1: `feature/auth-graphql`
+- Personne 2: `feature/vehicles-traffic`
+- Personne 3: `feature/incidents-frontend`
+
+## Demo Finale
+
+Scenario conseille: login JWT, consultation GraphQL, creation vehicule, simulation GPS, analyse congestion, creation incident, notification automatique, dashboard.

@@ -38,7 +38,7 @@ const resolvers = {
       const token = signToken({ id: user.id, role: user.role, email: user.email });
       return { token, user };
     },
-    register: async (_, { username, email, password, role }) => {
+    register: async (_, { username, email, password, role }, context) => {
       const payload = registerSchema.parse({ username, email, password, role });
       const existingUser = await findUserByEmail(payload.email);
       if (existingUser) {

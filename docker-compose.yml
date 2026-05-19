@@ -14,7 +14,7 @@ services:
       - auth_db_data:/var/lib/postgresql/data
 
   auth-service:
-    build: ./auth-service
+    build: ./backend/auth-service
     container_name: auth-service
     environment:
       PORT: 4001
@@ -27,7 +27,7 @@ services:
       - postgres-auth
 
   vehicle-service:
-    build: ./vehicle-service
+    build: ./backend/vehicle-service
     container_name: vehicle-service
     environment:
       PORT: 4002
@@ -35,7 +35,7 @@ services:
       - "4002:4002"
 
   traffic-service:
-    build: ./traffic-service
+    build: ./backend/traffic-service
     container_name: traffic-service
     environment:
       PORT: 4003
@@ -43,7 +43,7 @@ services:
       - "4003:4003"
 
   incident-service:
-    build: ./incident-service
+    build: ./backend/incident-service
     container_name: incident-service
     environment:
       PORT: 4004
@@ -52,7 +52,7 @@ services:
       - "4004:4004"
 
   notification-service:
-    build: ./notification-service
+    build: ./backend/notification-service
     container_name: notification-service
     environment:
       PORT: 4005
@@ -60,7 +60,7 @@ services:
       - "4005:4005"
 
   graphql-gateway:
-    build: ./graphql-gateway
+    build: ./backend/graphql-gateway
     container_name: graphql-gateway
     environment:
       PORT: 4000
@@ -76,6 +76,18 @@ services:
       - auth-service
       - vehicle-service
       - traffic-service
+      - incident-service
+      - notification-service
+
+  frontend-dashboard:
+    build: ./smart-traffic-frontend
+    container_name: frontend-dashboard
+    environment:
+      VITE_INCIDENT_API: http://localhost:4004
+      VITE_NOTIFICATION_API: http://localhost:4005
+    ports:
+      - "5173:5173"
+    depends_on:
       - incident-service
       - notification-service
 
