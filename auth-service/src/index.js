@@ -5,6 +5,7 @@ const morgan = require("morgan");
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const { buildSubgraphSchema } = require("@apollo/subgraph");
+const { ApolloServerPluginLandingPageLocalDefault } = require("@apollo/server/plugin/landingPage/default");
 const config = require("./config");
 const errorHandler = require("./middleware/errorHandler");
 const authRoutes = require("./routes/authRoutes");
@@ -21,11 +22,16 @@ async function startServer() {
   app.use(morgan("dev"));
   app.use(express.json());
 
+  if (!config.jwtSecret) {
+    throw new Error("JWT_SECRET must be set");
+  }
+
   app.use("/", authRoutes);
   app.use("/", profileRoutes);
 
   const server = new ApolloServer({
-    schema: buildSubgraphSchema([{ typeDefs, resolvers }])
+    schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
+    plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })]
   });
 
   await server.start();

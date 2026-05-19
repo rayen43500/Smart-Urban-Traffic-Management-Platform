@@ -1,7 +1,14 @@
 const express = require("express");
 const { registerSchema, loginSchema } = require("../validators/authValidators");
-const { createUser, findUserByEmail, validateUserPassword } = require("../services/userService");
-const { signToken } = require("../utils/jwt");
+const {
+  createUser,
+  findUserByEmail,
+  findUserByUsername,
+  listUsers,
+  validateUserPassword
+} = require("../services/userService");
+const { getUserFromHeader, signToken } = require("../utils/jwt");
+const { authGuard, requireRole } = require("../middleware/authGuard");
 
 const router = express.Router();
 
@@ -13,7 +20,15 @@ router.post("/register", async (req, res, next) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    const user = await createUser(payload);
+    const existingUsername = await findUserByUsername(payload.username);
+    if (existingUsername) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
+    const requester = getUserFromHeader(req.headers.authorization);
+    const role = requester && requester.role === "ADMIN" ? payload.role : undefined;
+
+    const user = await createUser({ ...payload, role });
     const token = signToken({ id: user.id, role: user.role, email: user.email });
 
     return res.status(201).json({
@@ -41,6 +56,15 @@ router.post("/login", async (req, res, next) => {
       token,
       user: { id: user.id, username: user.username, email: user.email, role: user.role }
     });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+router.get("/admin/users", authGuard, requireRole("ADMIN"), async (req, res, next) => {
+  try {
+    const users = await listUsers();
+    return res.json({ users });
   } catch (error) {
     return next(error);
   }

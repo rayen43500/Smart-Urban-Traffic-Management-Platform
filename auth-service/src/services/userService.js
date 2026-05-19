@@ -17,8 +17,25 @@ async function findUserByEmail(email) {
   return prisma.user.findUnique({ where: { email } });
 }
 
+async function findUserByUsername(username) {
+  return prisma.user.findUnique({ where: { username } });
+}
+
 async function findUserById(id) {
   return prisma.user.findUnique({ where: { id } });
+}
+
+async function listUsers() {
+  return prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      role: true,
+      createdAt: true
+    },
+    orderBy: { createdAt: "desc" }
+  });
 }
 
 async function validateUserPassword(user, password) {
@@ -29,4 +46,11 @@ async function validateUserPassword(user, password) {
   return comparePassword(password, user.password);
 }
 
-module.exports = { createUser, findUserByEmail, findUserById, validateUserPassword };
+module.exports = {
+  createUser,
+  findUserByEmail,
+  findUserByUsername,
+  findUserById,
+  listUsers,
+  validateUserPassword
+};
