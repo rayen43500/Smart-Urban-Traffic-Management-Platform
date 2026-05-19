@@ -47,6 +47,7 @@ services:
     container_name: incident-service
     environment:
       PORT: 4004
+      NOTIFICATION_SERVICE_URL: http://notification-service:4005
     ports:
       - "4004:4004"
 
